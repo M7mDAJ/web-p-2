@@ -6,4 +6,4 @@
 
    header('location:../home.php');
 
-?>
+?>  

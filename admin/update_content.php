@@ -131,7 +131,7 @@ if(isset($_POST['delete_video'])){
    
 <section class="video-form">
 
-   <h1 class="heading">update content</h1>
+   <h1 class="heading">Update content</h1>
 
    <?php
       $select_videos = $conn->prepare("SELECT * FROM `content` WHERE id = ? AND tutor_id = ?");
@@ -147,14 +147,14 @@ if(isset($_POST['delete_video'])){
       <p>update status <span>*</span></p>
       <select name="status" class="box" required>
          <option value="<?= $fecth_videos['status']; ?>" selected><?= $fecth_videos['status']; ?></option>
-         <option value="active">active</option>
+         <option value="active">Active</option>
          <option value="deactive">deactive</option>
       </select>
-      <p>update title <span>*</span></p>
+      <p>Update title <span>*</span></p>
       <input type="text" name="title" maxlength="100" required placeholder="enter video title" class="box" value="<?= $fecth_videos['title']; ?>">
-      <p>update description <span>*</span></p>
+      <p>Update description <span>*</span></p>
       <textarea name="description" class="box" required placeholder="write description" maxlength="1000" cols="30" rows="10"><?= $fecth_videos['description']; ?></textarea>
-      <p>update playlist</p>
+      <p>Update playlist</p>
       <select name="playlist" class="box">
          <option value="<?= $fecth_videos['playlist_id']; ?>" selected>--select playlist</option>
          <?php
@@ -174,14 +174,14 @@ if(isset($_POST['delete_video'])){
          ?>
       </select>
       <img src="../uploaded_files/<?= $fecth_videos['thumb']; ?>" alt="">
-      <p>update thumbnail</p>
+      <p>Update thumbnail</p>
       <input type="file" name="thumb" accept="image/*" class="box">
       <video src="../uploaded_files/<?= $fecth_videos['video']; ?>" controls></video>
-      <p>update video</p>
+      <p>Update video</p>
       <input type="file" name="video" accept="video/*" class="box">
       <input type="submit" value="update content" name="update" class="btn">
       <div class="flex-btn">
-         <a href="view_content.php?get_id=<?= $video_id; ?>" class="option-btn">view content</a>
+         <a href="view_content.php?get_id=<?= $video_id; ?>" class="option-btn">View content</a>
          <input type="submit" value="delete content" name="delete_video" class="delete-btn">
       </div>
    </form>
