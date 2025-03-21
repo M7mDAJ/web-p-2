@@ -37,7 +37,7 @@ if(isset($_POST['remove'])){
    <meta charset="UTF-8">
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>liked videos</title>
+   <title>Liked videos</title>
 
    <!-- font awesome cdn link  -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
@@ -54,7 +54,7 @@ if(isset($_POST['remove'])){
 
 <section class="liked-videos">
 
-   <h1 class="heading">liked videos</h1>
+   <h1 class="heading">Liked videos</h1>
 
    <div class="box-container">
 
@@ -86,18 +86,18 @@ if(isset($_POST['remove'])){
       <h3 class="title"><?= $fetch_contents['title']; ?></h3>
       <form action="" method="post" class="flex-btn">
          <input type="hidden" name="content_id" value="<?= $fetch_contents['id']; ?>">
-         <a href="watch_video.php?get_id=<?= $fetch_contents['id']; ?>" class="inline-btn">watch video</a>
+         <a href="watch_video.php?get_id=<?= $fetch_contents['id']; ?>" class="inline-btn">Watch video</a>
          <input type="submit" value="remove" class="inline-delete-btn" name="remove">
       </form>
    </div>
    <?php
             }
          }else{
-            echo '<p class="emtpy">content was not found!</p>';         
+            echo '<p class="emtpy">Content was not found!</p>';         
          }
       }
    }else{
-      echo '<p class="empty">nothing added to likes yet!</p>';
+      echo '<p class="empty">Nothing added to likes yet!</p>';
    }
    ?>
 

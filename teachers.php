@@ -16,7 +16,7 @@ if(isset($_COOKIE['user_id'])){
    <meta charset="UTF-8">
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>teachers</title>
+   <title>Teachers</title>
 
    <!-- font awesome cdn link  -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
@@ -33,7 +33,7 @@ if(isset($_COOKIE['user_id'])){
 
 <section class="teachers">
 
-   <h1 class="heading">expert tutors</h1>
+   <h1 class="heading">Expert tutors</h1>
 
    <form action="search_tutor.php" method="post" class="search-tutor">
       <input type="text" name="search_tutor" maxlength="100" placeholder="search tutor..." required>
@@ -43,7 +43,7 @@ if(isset($_COOKIE['user_id'])){
    <div class="box-container">
 
       <div class="box offer">
-         <h3>become a tutor</h3>
+         <h3>Become a tutor</h3>
          <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Laborum, magnam!</p>
          <a href="admin/register.php" class="inline-btn">get started</a>
       </div>
@@ -80,10 +80,10 @@ if(isset($_COOKIE['user_id'])){
                <span><?= $fetch_tutor['profession']; ?></span>
             </div>
          </div>
-         <p>playlists : <span><?= $total_playlists; ?></span></p>
-         <p>total videos : <span><?= $total_contents ?></span></p>
-         <p>total likes : <span><?= $total_likes ?></span></p>
-         <p>total comments : <span><?= $total_comments ?></span></p>
+         <p>Playlists : <span><?= $total_playlists; ?></span></p>
+         <p>Total videos : <span><?= $total_contents ?></span></p>
+         <p>Total likes : <span><?= $total_likes ?></span></p>
+         <p>Total comments : <span><?= $total_comments ?></span></p>
          <form action="tutor_profile.php" method="post">
             <input type="hidden" name="tutor_email" value="<?= $fetch_tutor['email']; ?>">
             <input type="submit" value="view profile" name="tutor_fetch" class="inline-btn">
