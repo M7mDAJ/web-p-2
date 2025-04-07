@@ -1,67 +1,71 @@
 let body = document.body;
 
-let profile = document.querySelector('.header .flex .profile');
+const profile = document.querySelector('.header .flex .profile');
+const searchForm = document.querySelector('.header .flex .search-form');
+const sideBar = document.querySelector('.side-bar');
+const userBtn = document.querySelector('#user-btn');
+const searchBtn = document.querySelector('#search-btn');
+const menuBtn = document.querySelector('#menu-btn');
+const closeSidebarBtn = document.querySelector('.side-bar .close-side-bar');
+const toggleBtn = document.querySelector('#toggle-btn');
 
-document.querySelector('#user-btn').onclick = () =>{
-   profile.classList.toggle('active');
-   searchForm.classList.remove('active');
-}
+// Toggle user profile
+userBtn?.addEventListener('click', () => {
+   profile?.classList.toggle('active');
+   searchForm?.classList.remove('active');
+});
 
-let searchForm = document.querySelector('.header .flex .search-form');
+// Toggle search form
+searchBtn?.addEventListener('click', () => {
+   searchForm?.classList.toggle('active');
+   profile?.classList.remove('active');
+});
 
-document.querySelector('#search-btn').onclick = () =>{
-   searchForm.classList.toggle('active');
-   profile.classList.remove('active');
-}
-
-let sideBar = document.querySelector('.side-bar');
-
-document.querySelector('#menu-btn').onclick = () =>{
-   sideBar.classList.toggle('active');
+// Toggle sidebar
+menuBtn?.addEventListener('click', () => {
+   sideBar?.classList.toggle('active');
    body.classList.toggle('active');
-}
+});
 
-document.querySelector('.side-bar .close-side-bar').onclick = () =>{
-   sideBar.classList.remove('active');
+// Close sidebar
+closeSidebarBtn?.addEventListener('click', () => {
+   sideBar?.classList.remove('active');
    body.classList.remove('active');
-}
+});
 
-window.onscroll = () =>{
-   profile.classList.remove('active');
-   searchForm.classList.remove('active');
+// Scroll handler with basic debounce
+let scrollTimeout;
+window.addEventListener('scroll', () => {
+   clearTimeout(scrollTimeout);
+   scrollTimeout = setTimeout(() => {
+      profile?.classList.remove('active');
+      searchForm?.classList.remove('active');
 
-   if(window.innerWidth < 1200){
-      sideBar.classList.remove('active');
-      body.classList.remove('active');
-   }
+      if (window.innerWidth < 1200) {
+         sideBar?.classList.remove('active');
+         body.classList.remove('active');
+      }
+   }, 100);
+});
 
-}
-
-let toggleBtn = document.querySelector('#toggle-btn');
-let darkMode = localStorage.getItem('dark-mode');
-
-const enabelDarkMode = () =>{
-   toggleBtn.classList.replace('fa-sun', 'fa-moon');
+// Dark mode
+const enableDarkMode = () => {
+   toggleBtn?.classList.replace('fa-sun', 'fa-moon');
    body.classList.add('dark');
    localStorage.setItem('dark-mode', 'enabled');
-}
+};
 
-const disableDarkMode = () =>{
-   toggleBtn.classList.replace('fa-moon', 'fa-sun');
+const disableDarkMode = () => {
+   toggleBtn?.classList.replace('fa-moon', 'fa-sun');
    body.classList.remove('dark');
    localStorage.setItem('dark-mode', 'disabled');
+};
+
+if (localStorage.getItem('dark-mode') === 'enabled') {
+   enableDarkMode();
 }
 
-
-toggleBtn.onclick = (e) =>{
-   let darkMode = localStorage.getItem('dark-mode');
-   if(darkMode === 'disabled'){
-      enabelDarkMode();
-   }else{
-      disableDarkMode();
-   }
-}
-
-if(darkMode === 'enabled'){
-   enabelDarkMode();
-}
+toggleBtn?.addEventListener('click', () => {
+   const isEnabled = localStorage.getItem('dark-mode') === 'enabled';
+   isEnabled ? disableDarkMode() : enableDarkMode();
+});

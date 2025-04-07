@@ -1,72 +1,94 @@
 let body = document.body;
 
 let profile = document.querySelector('.header .flex .profile');
-
-document.querySelector('#user-btn').onclick = () =>{
-   profile.classList.toggle('active');
-   searchForm.classList.remove('active');
-}
-
 let searchForm = document.querySelector('.header .flex .search-form');
-
-document.querySelector('#search-btn').onclick = () =>{
-   searchForm.classList.toggle('active');
-   profile.classList.remove('active');
-}
-
 let sideBar = document.querySelector('.side-bar');
 
-document.querySelector('#menu-btn').onclick = () =>{
-   sideBar.classList.toggle('active');
-   body.classList.toggle('active');
+const userBtn = document.querySelector('#user-btn');
+const searchBtn = document.querySelector('#search-btn');
+const menuBtn = document.querySelector('#menu-btn');
+const closeSidebarBtn = document.querySelector('.side-bar .close-side-bar');
+const toggleBtn = document.querySelector('#toggle-btn');
+
+// Toggle user profile
+if (userBtn) {
+   userBtn.onclick = () => {
+      profile.classList.toggle('active');
+      searchForm.classList.remove('active');
+   };
 }
 
-document.querySelector('.side-bar .close-side-bar').onclick = () =>{
-   sideBar.classList.remove('active');
-   body.classList.remove('active');
+// Toggle search form
+if (searchBtn) {
+   searchBtn.onclick = () => {
+      searchForm.classList.toggle('active');
+      profile.classList.remove('active');
+   };
 }
 
-document.querySelectorAll('input[type="number"]').forEach(InputNumber => {
-   InputNumber.oninput = () =>{
-      if(InputNumber.value.length > InputNumber.maxLength) InputNumber.value = InputNumber.value.slice(0, InputNumber.maxLength);
+// Toggle sidebar
+if (menuBtn) {
+   menuBtn.onclick = () => {
+      sideBar.classList.toggle('active');
+      body.classList.toggle('active');
+   };
+}
+
+// Close sidebar
+if (closeSidebarBtn) {
+   closeSidebarBtn.onclick = () => {
+      sideBar.classList.remove('active');
+      body.classList.remove('active');
+   };
+}
+
+// Limit number input length
+document.querySelectorAll('input[type="number"]').forEach(input => {
+   input.addEventListener('input', () => {
+      const maxLength = input.getAttribute('maxlength');
+      if (maxLength && input.value.length > maxLength) {
+         input.value = input.value.slice(0, maxLength);
+      }
+   });
+});
+
+// Close popups when clicking outside
+window.addEventListener('click', (e) => {
+   if (!profile.contains(e.target) && !userBtn.contains(e.target)) {
+      profile.classList.remove('active');
+   }
+   if (!searchForm.contains(e.target) && !searchBtn.contains(e.target)) {
+      searchForm.classList.remove('active');
    }
 });
 
-window.onscroll = () =>{
-   profile.classList.remove('active');
-   searchForm.classList.remove('active');
+// Smart scroll handler (throttle)
+let scrollTimeout;
+window.addEventListener('scroll', () => {
+   clearTimeout(scrollTimeout);
+   scrollTimeout = setTimeout(() => {
+      profile.classList.remove('active');
+      searchForm.classList.remove('active');
 
-   if(window.innerWidth < 1200){
-      sideBar.classList.remove('active');
-      body.classList.remove('active');
-   }
+      if (window.innerWidth < 1200) {
+         sideBar.classList.remove('active');
+         body.classList.remove('active');
+      }
+   }, 100);
+});
 
-}
-
-let toggleBtn = document.querySelector('#toggle-btn');
+// Dark mode toggle
 let darkMode = localStorage.getItem('dark-mode');
 
-const enabelDarkMode = () =>{
-   toggleBtn.classList.replace('fa-sun', 'fa-moon');
-   body.classList.add('dark');
-   localStorage.setItem('dark-mode', 'enabled');
-}
+const setDarkMode = (enable) => {
+   toggleBtn.classList.replace(enable ? 'fa-sun' : 'fa-moon', enable ? 'fa-moon' : 'fa-sun');
+   body.classList.toggle('dark', enable);
+   localStorage.setItem('dark-mode', enable ? 'enabled' : 'disabled');
+};
 
-const disableDarkMode = () =>{
-   toggleBtn.classList.replace('fa-moon', 'fa-sun');
-   body.classList.remove('dark');
-   localStorage.setItem('dark-mode', 'disabled');
-}
+if (darkMode === 'enabled') setDarkMode(true);
 
-if(darkMode === 'enabled'){
-   enabelDarkMode();
-}
-
-toggleBtn.onclick = (e) =>{
-   let darkMode = localStorage.getItem('dark-mode');
-   if(darkMode === 'disabled'){
-      enabelDarkMode();
-   }else{
-      disableDarkMode();
-   }
-}
+toggleBtn?.addEventListener('click', () => {
+   const isDark = localStorage.getItem('dark-mode') === 'enabled';
+   setDarkMode(!isDark);
+});

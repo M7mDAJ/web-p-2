@@ -7,23 +7,33 @@ if(isset($_COOKIE['tutor_id'])){
 }else{
    $tutor_id = '';
    header('location:login.php');
+   exit();
 }
 
-$select_contents = $conn->prepare("SELECT * FROM `content` WHERE tutor_id = ?");
+// جلب بيانات المعلم
+$select_tutor = $conn->prepare("SELECT name FROM `tutors` WHERE id = ? LIMIT 1");
+$select_tutor->execute([$tutor_id]);
+$fetch_profile = $select_tutor->fetch(PDO::FETCH_ASSOC);
+
+// حساب المحتويات
+$select_contents = $conn->prepare("SELECT COUNT(*) FROM `content` WHERE tutor_id = ?");
 $select_contents->execute([$tutor_id]);
-$total_contents = $select_contents->rowCount();
+$total_contents = $select_contents->fetchColumn();
 
-$select_playlists = $conn->prepare("SELECT * FROM `playlist` WHERE tutor_id = ?");
+// حساب القوائم التشغيلية
+$select_playlists = $conn->prepare("SELECT COUNT(*) FROM `playlist` WHERE tutor_id = ?");
 $select_playlists->execute([$tutor_id]);
-$total_playlists = $select_playlists->rowCount();
+$total_playlists = $select_playlists->fetchColumn();
 
-$select_likes = $conn->prepare("SELECT * FROM `likes` WHERE tutor_id = ?");
+// حساب الإعجابات
+$select_likes = $conn->prepare("SELECT COUNT(*) FROM `likes` WHERE tutor_id = ?");
 $select_likes->execute([$tutor_id]);
-$total_likes = $select_likes->rowCount();
+$total_likes = $select_likes->fetchColumn();
 
-$select_comments = $conn->prepare("SELECT * FROM `comments` WHERE tutor_id = ?");
+// حساب التعليقات
+$select_comments = $conn->prepare("SELECT COUNT(*) FROM `comments` WHERE tutor_id = ?");
 $select_comments->execute([$tutor_id]);
-$total_comments = $select_comments->rowCount();
+$total_comments = $select_comments->fetchColumn();
 
 ?>
 
@@ -40,21 +50,18 @@ $total_comments = $select_comments->rowCount();
 
    <!-- custom css file link  -->
    <link rel="stylesheet" href="../css/admin_style.css">
-
 </head>
 <body>
 
 <?php include '../components/admin_header.php'; ?>
    
 <section class="dashboard">
-
    <h1 class="heading">Dashboard</h1>
 
    <div class="box-container">
-
       <div class="box">
          <h3>Welcome!</h3>
-         <p><?= $fetch_profile['name']; ?></p>
+         <p><?= isset($fetch_profile['name']) ? $fetch_profile['name'] : 'Unknown'; ?></p>
          <a href="profile.php" class="btn">View profile</a>
       </div>
 
@@ -90,24 +97,8 @@ $total_comments = $select_comments->rowCount();
             <a href="register.php" class="option-btn">Register</a>
          </div>
       </div>
-
    </div>
-
 </section>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 <?php include '../components/footer.php'; ?>
 

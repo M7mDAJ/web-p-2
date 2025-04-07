@@ -7,6 +7,7 @@ if(isset($_COOKIE['user_id'])){
 }else{
    $user_id = '';
    header('location:home.php');
+   exit;
 }
 
 if(isset($_POST['remove'])){
@@ -21,12 +22,11 @@ if(isset($_POST['remove'])){
       if($verify_likes->rowCount() > 0){
          $remove_likes = $conn->prepare("DELETE FROM `likes` WHERE user_id = ? AND content_id = ?");
          $remove_likes->execute([$user_id, $content_id]);
-         $message[] = 'removed from likes!';
+         $message[] = 'Removed from likes!';
       }
    }else{
-      $message[] = 'please login first!';
+      $message[] = 'Please login first!';
    }
-
 }
 
 ?>
@@ -70,9 +70,9 @@ if(isset($_POST['remove'])){
             if($select_contents->rowCount() > 0){
                while($fetch_contents = $select_contents->fetch(PDO::FETCH_ASSOC)){
 
-               $select_tutors = $conn->prepare("SELECT * FROM `tutors` WHERE id = ?");
-               $select_tutors->execute([$fetch_contents['tutor_id']]);
-               $fetch_tutor = $select_tutors->fetch(PDO::FETCH_ASSOC);
+                  $select_tutors = $conn->prepare("SELECT * FROM `tutors` WHERE id = ?");
+                  $select_tutors->execute([$fetch_contents['tutor_id']]);
+                  $fetch_tutor = $select_tutors->fetch(PDO::FETCH_ASSOC);
    ?>
    <div class="box">
       <div class="tutor">
@@ -87,32 +87,23 @@ if(isset($_POST['remove'])){
       <form action="" method="post" class="flex-btn">
          <input type="hidden" name="content_id" value="<?= $fetch_contents['id']; ?>">
          <a href="watch_video.php?get_id=<?= $fetch_contents['id']; ?>" class="inline-btn">Watch video</a>
-         <input type="submit" value="remove" class="inline-delete-btn" name="remove">
+         <input type="submit" value="Remove" class="inline-delete-btn" name="remove">
       </form>
    </div>
    <?php
+               }
+            }else{
+               echo '<p class="empty">Content was not found!</p>';         
             }
-         }else{
-            echo '<p class="emtpy">Content was not found!</p>';         
          }
+      }else{
+         echo '<p class="empty">Nothing added to likes yet!</p>';
       }
-   }else{
-      echo '<p class="empty">Nothing added to likes yet!</p>';
-   }
    ?>
 
    </div>
 
 </section>
-
-
-
-
-
-
-
-
-
 
 <?php include 'components/footer.php'; ?>
 

@@ -8,28 +8,25 @@ if(isset($_COOKIE['user_id'])){
    $user_id = '';
 }
 
+$message = [];
+
 if(isset($_POST['submit'])){
 
-   $name = $_POST['name']; 
-   $name = filter_var($name, FILTER_SANITIZE_STRING);
-   $email = $_POST['email']; 
-   $email = filter_var($email, FILTER_SANITIZE_STRING);
-   $number = $_POST['number']; 
-   $number = filter_var($number, FILTER_SANITIZE_STRING);
-   $msg = $_POST['msg']; 
-   $msg = filter_var($msg, FILTER_SANITIZE_STRING);
+   $name = filter_var($_POST['name'], FILTER_SANITIZE_STRING);
+   $email = filter_var($_POST['email'], FILTER_SANITIZE_STRING);
+   $number = filter_var($_POST['number'], FILTER_SANITIZE_STRING);
+   $msg = filter_var($_POST['msg'], FILTER_SANITIZE_STRING);
 
-   $select_contact = $conn->prepare("SELECT * FROM `contact` WHERE name = ? AND email = ? AND number = ? AND message = ?");
+   $select_contact = $conn->prepare("SELECT * FROM `contact` WHERE name = ? AND email = ? AND number = ? AND message = ? LIMIT 1");
    $select_contact->execute([$name, $email, $number, $msg]);
 
    if($select_contact->rowCount() > 0){
-      $message[] = 'message sent already!';
+      $message[] = 'Message has already been sent!';
    }else{
-      $insert_message = $conn->prepare("INSERT INTO `contact`(name, email, number, message) VALUES(?,?,?,?)");
+      $insert_message = $conn->prepare("INSERT INTO `contact` (name, email, number, message) VALUES (?, ?, ?, ?)");
       $insert_message->execute([$name, $email, $number, $msg]);
-      $message[] = 'message sent successfully!';
+      $message[] = 'Message sent successfully!';
    }
-
 }
 
 ?>
@@ -42,19 +39,25 @@ if(isset($_POST['submit'])){
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Contact</title>
 
-   <!-- font awesome cdn link  -->
+   <!-- Font Awesome -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 
-   <!-- custom css file link  -->
+   <!-- Custom CSS -->
    <link rel="stylesheet" href="css/style.css">
-
 </head>
 <body>
 
 <?php include 'components/user_header.php'; ?>
 
-<!-- contact section starts  -->
+<?php
+   if(!empty($message)){
+      foreach($message as $msg){
+         echo '<div class="message"><span>' . htmlspecialchars($msg) . '</span></div>';
+      }
+   }
+?>
 
+<!-- contact section starts  -->
 <section class="contact">
 
    <div class="row">
@@ -65,11 +68,11 @@ if(isset($_POST['submit'])){
 
       <form action="" method="post">
          <h3>Get in touch</h3>
-         <input type="text" placeholder="enter your name" required maxlength="100" name="name" class="box">
-         <input type="email" placeholder="enter your email" required maxlength="100" name="email" class="box">
-         <input type="number" min="0" max="9999999999" placeholder="Enter your number" required maxlength="10" name="number" class="box">
+         <input type="text" placeholder="Enter your name" required maxlength="100" name="name" class="box">
+         <input type="email" placeholder="Enter your email" required maxlength="100" name="email" class="box">
+         <input type="text" pattern="\d{10}" title="Enter 10-digit phone number" placeholder="Enter your number" required maxlength="10" name="number" class="box">
          <textarea name="msg" class="box" placeholder="Enter your message" required cols="30" rows="10" maxlength="1000"></textarea>
-         <input type="submit" value="send message" class="inline-btn" name="submit">
+         <input type="submit" value="Send message" class="inline-btn" name="submit">
       </form>
 
    </div>
@@ -86,37 +89,25 @@ if(isset($_POST['submit'])){
       <div class="box">
          <i class="fas fa-envelope"></i>
          <h3>Email address</h3>
-         <a href="mailto:shaikhanas@gmail.com">shaikhanas@gmail.come</a>
-         <a href="mailto:anasbhai@gmail.com">anasbhai@gmail.come</a>
+         <a href="mailto:shaikhanas@gmail.com">shaikhanas@gmail.com</a>
+         <a href="mailto:anasbhai@gmail.com">anasbhai@gmail.com</a>
       </div>
 
       <div class="box">
          <i class="fas fa-map-marker-alt"></i>
          <h3>Office address</h3>
-         <a href="#">Flat no. 1, a-1 building, jogeshwari, mumbai, india - 400104</a>
+         <a href="#">Flat no. 1, A-1 Building, Jogeshwari, Mumbai, India - 400104</a>
       </div>
-
 
    </div>
 
 </section>
-
 <!-- contact section ends -->
 
+<?php include 'components/footer.php'; ?>
 
-
-
-
-
-
-
-
-
-
-<?php include 'components/footer.php'; ?>  
-
-<!-- custom js file link  -->
+<!-- JS -->
 <script src="js/script.js"></script>
-   
+
 </body>
 </html>

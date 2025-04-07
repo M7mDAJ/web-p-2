@@ -18,21 +18,25 @@ if(isset($_POST['submit'])){
    $prev_pass = $fetch_user['password'];
    $prev_image = $fetch_user['image'];
 
+   if(empty($prev_image) || !file_exists('uploaded_files/'.$prev_image)){
+      $prev_image = 'default-user.png';
+   }
+
    $name = $_POST['name'];
    $name = filter_var($name, FILTER_SANITIZE_STRING);
 
-  if(!empty($name)){
-   $update_name = $conn->prepare("UPDATE `users` SET name = ? WHERE id = ?");
-   $update_name->execute([$name, $user_id]);
-   $message[] = 'username updated successfully!';
-  }
+   if(!empty($name)){
+      $update_name = $conn->prepare("UPDATE `users` SET name = ? WHERE id = ?");
+      $update_name->execute([$name, $user_id]);
+      $message[] = 'username updated successfully!';
+   }
 
    $email = $_POST['email'];
    $email = filter_var($email, FILTER_SANITIZE_STRING);
 
    if(!empty($email)){
-      $select_email = $conn->prepare("SELECT email FROM `users` WHERE email = ?");
-      $select_email->execute([$email]);
+      $select_email = $conn->prepare("SELECT email FROM `users` WHERE email = ? AND id != ?");
+      $select_email->execute([$email, $user_id]);
       if($select_email->rowCount() > 0){
          $message[] = 'email already taken!';
       }else{
@@ -57,7 +61,7 @@ if(isset($_POST['submit'])){
          $update_image = $conn->prepare("UPDATE `users` SET `image` = ? WHERE id = ?");
          $update_image->execute([$rename, $user_id]);
          move_uploaded_file($image_tmp_name, $image_folder);
-         if($prev_image != '' AND $prev_image != $rename){
+         if(!empty($prev_image) && $prev_image != $rename && file_exists('uploaded_files/'.$prev_image) && $prev_image != 'default-user.png'){
             unlink('uploaded_files/'.$prev_image);
          }
          $message[] = 'image updated successfully!';
@@ -115,22 +119,25 @@ if(isset($_POST['submit'])){
 
    <form action="" method="post" enctype="multipart/form-data">
       <h3>Update profile</h3>
+      <div style="text-align: center;">
+         <img src="uploaded_files/<?= htmlspecialchars($prev_image); ?>" alt="User Avatar" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem;">
+      </div>
       <div class="flex">
          <div class="col">
             <p>Full name</p>
-            <input type="text" name="name" placeholder="<?= $fetch_profile['name']; ?>" maxlength="100" class="box">
+            <input type="text" name="name" placeholder="<?= $fetch_user['name']; ?>" maxlength="100" class="box">
             <p>Email address</p>
-            <input type="email" name="email" placeholder="<?= $fetch_profile['email']; ?>" maxlength="100" class="box">
+            <input type="email" name="email" placeholder="<?= $fetch_user['email']; ?>" maxlength="100" class="box">
             <p>Update avatar</p>
             <input type="file" name="image" accept="image/*" class="box">
          </div>
          <div class="col">
-               <p>Current password</p>
-               <input type="password" name="old_pass" placeholder="Enter your old password" maxlength="50" class="box">
-               <p>New password</p>
-               <input type="password" name="new_pass" placeholder="Enter your new password" maxlength="50" class="box">
-               <p>Confirm password</p>
-               <input type="password" name="cpass" placeholder="Confirm your new password" maxlength="50" class="box">
+            <p>Current password</p>
+            <input type="password" name="old_pass" placeholder="Enter your old password" maxlength="50" class="box">
+            <p>New password</p>
+            <input type="password" name="new_pass" placeholder="Enter your new password" maxlength="50" class="box">
+            <p>Confirm password</p>
+            <input type="password" name="cpass" placeholder="Confirm your new password" maxlength="50" class="box">
          </div>
       </div>
       <input type="submit" name="submit" value="update profile" class="btn">
@@ -138,24 +145,9 @@ if(isset($_POST['submit'])){
 
 </section>
 
-<!-- update profile section ends -->
-
-
-
-
-
-
-
-
-
-
-
-
-
 <?php include 'components/footer.php'; ?>
 
-<!-- custom js file link  -->
 <script src="js/script.js"></script>
-   
+
 </body>
 </html>

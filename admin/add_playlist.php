@@ -4,35 +4,40 @@ include '../components/connect.php';
 
 if(isset($_COOKIE['tutor_id'])){
    $tutor_id = $_COOKIE['tutor_id'];
-}else{
+} else {
    $tutor_id = '';
    header('location:login.php');
+   exit;
 }
 
 if(isset($_POST['submit'])){
 
    $id = unique_id();
-   $title = $_POST['title'];
-   $title = filter_var($title, FILTER_SANITIZE_STRING);
-   $description = $_POST['description'];
-   $description = filter_var($description, FILTER_SANITIZE_STRING);
-   $status = $_POST['status'];
-   $status = filter_var($status, FILTER_SANITIZE_STRING);
+   $title = filter_var($_POST['title'], FILTER_SANITIZE_STRING);
+   $description = filter_var($_POST['description'], FILTER_SANITIZE_STRING);
+   $status = filter_var($_POST['status'], FILTER_SANITIZE_STRING);
 
+   // معالجة الصورة
    $image = $_FILES['image']['name'];
    $image = filter_var($image, FILTER_SANITIZE_STRING);
-   $ext = pathinfo($image, PATHINFO_EXTENSION);
+   $ext = strtolower(pathinfo($image, PATHINFO_EXTENSION));
+   $allowed_image_types = ['jpg', 'jpeg', 'png', 'gif'];
+
    $rename = unique_id().'.'.$ext;
    $image_size = $_FILES['image']['size'];
    $image_tmp_name = $_FILES['image']['tmp_name'];
    $image_folder = '../uploaded_files/'.$rename;
 
-   $add_playlist = $conn->prepare("INSERT INTO `playlist`(id, tutor_id, title, description, thumb, status) VALUES(?,?,?,?,?,?)");
-   $add_playlist->execute([$id, $tutor_id, $title, $description, $rename, $status]);
-
-   move_uploaded_file($image_tmp_name, $image_folder);
-
-   $message[] = 'new playlist created!';  
+   if(!in_array($ext, $allowed_image_types)){
+      $message[] = '❌ Invalid image format!';
+   } elseif($image_size > 2000000){
+      $message[] = '❌ Image size is too large!';
+   } else {
+      $add_playlist = $conn->prepare("INSERT INTO `playlist`(id, tutor_id, title, description, thumb, status) VALUES(?,?,?,?,?,?)");
+      $add_playlist->execute([$id, $tutor_id, $title, $description, $rename, $status]);
+      move_uploaded_file($image_tmp_name, $image_folder);
+      $message[] = '✅ New playlist created!';
+   }
 
 }
 
@@ -46,12 +51,8 @@ if(isset($_POST['submit'])){
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Add Playlist</title>
 
-   <!-- font awesome cdn link  -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-
-   <!-- custom css file link  -->
    <link rel="stylesheet" href="../css/admin_style.css">
-
 </head>
 <body>
 
@@ -61,37 +62,35 @@ if(isset($_POST['submit'])){
 
    <h1 class="heading">Create playlist</h1>
 
+   <?php
+   if(!empty($message)){
+      foreach($message as $msg){
+         echo '<p class="message">'.$msg.'</p>';
+      }
+   }
+   ?>
+
    <form action="" method="post" enctype="multipart/form-data">
-      <p>playlist status <span>*</span></p>
+      <p>Playlist status <span>*</span></p>
       <select name="status" class="box" required>
-         <option value="" selected disabled>-- Select status</option>
-         <option value="active">Active</option>
-         <option value="deactive">Deactive</option>
+         <option value="" disabled <?= !isset($_POST['status']) ? 'selected' : '' ?>>-- Select status</option>
+         <option value="active" <?= (isset($_POST['status']) && $_POST['status'] === 'active') ? 'selected' : '' ?>>Active</option>
+         <option value="deactive" <?= (isset($_POST['status']) && $_POST['status'] === 'deactive') ? 'selected' : '' ?>>Deactive</option>
       </select>
+
       <p>Playlist title <span>*</span></p>
-      <input type="text" name="title" maxlength="100" required placeholder="enter playlist title" class="box">
+      <input type="text" name="title" maxlength="100" required placeholder="Enter playlist title" class="box" value="<?= isset($_POST['title']) ? htmlspecialchars($_POST['title']) : '' ?>">
+
       <p>Playlist description <span>*</span></p>
-      <textarea name="description" class="box" required placeholder="write description" maxlength="1000" cols="30" rows="10"></textarea>
+      <textarea name="description" class="box" required placeholder="Write description" maxlength="1000" cols="30" rows="10"><?= isset($_POST['description']) ? htmlspecialchars($_POST['description']) : '' ?></textarea>
+
       <p>Playlist thumbnail <span>*</span></p>
       <input type="file" name="image" accept="image/*" required class="box">
-      <input type="submit" value="create playlist" name="submit" class="btn">
+
+      <input type="submit" value="Create playlist" name="submit" class="btn">
    </form>
 
 </section>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 <?php include '../components/footer.php'; ?>
 

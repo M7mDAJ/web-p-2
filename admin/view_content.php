@@ -4,60 +4,66 @@ include '../components/connect.php';
 
 if(isset($_COOKIE['tutor_id'])){
    $tutor_id = $_COOKIE['tutor_id'];
-}else{
-   $tutor_id = '';
+} else {
    header('location:login.php');
+   exit();
 }
 
 if(isset($_GET['get_id'])){
    $get_id = $_GET['get_id'];
-}else{
-   $get_id = '';
+} else {
    header('location:contents.php');
+   exit();
 }
+
+$message = [];
 
 if(isset($_POST['delete_video'])){
 
-   $delete_id = $_POST['video_id'];
-   $delete_id = filter_var($delete_id, FILTER_SANITIZE_STRING);
+   $delete_id = filter_var($_POST['video_id'], FILTER_SANITIZE_STRING);
 
+   // Delete thumbnail
    $delete_video_thumb = $conn->prepare("SELECT thumb FROM `content` WHERE id = ? LIMIT 1");
    $delete_video_thumb->execute([$delete_id]);
    $fetch_thumb = $delete_video_thumb->fetch(PDO::FETCH_ASSOC);
-   unlink('../uploaded_files/'.$fetch_thumb['thumb']);
+   $thumb_path = '../uploaded_files/'.$fetch_thumb['thumb'];
+   if(file_exists($thumb_path)){
+      unlink($thumb_path);
+   }
 
+   // Delete video file
    $delete_video = $conn->prepare("SELECT video FROM `content` WHERE id = ? LIMIT 1");
    $delete_video->execute([$delete_id]);
    $fetch_video = $delete_video->fetch(PDO::FETCH_ASSOC);
-   unlink('../uploaded_files/'.$fetch_video['video']);
+   $video_path = '../uploaded_files/'.$fetch_video['video'];
+   if(file_exists($video_path)){
+      unlink($video_path);
+   }
 
-   $delete_likes = $conn->prepare("DELETE FROM `likes` WHERE content_id = ?");
-   $delete_likes->execute([$delete_id]);
-   $delete_comments = $conn->prepare("DELETE FROM `comments` WHERE content_id = ?");
-   $delete_comments->execute([$delete_id]);
+   // Delete likes and comments
+   $conn->prepare("DELETE FROM `likes` WHERE content_id = ?")->execute([$delete_id]);
+   $conn->prepare("DELETE FROM `comments` WHERE content_id = ?")->execute([$delete_id]);
 
-   $delete_content = $conn->prepare("DELETE FROM `content` WHERE id = ?");
-   $delete_content->execute([$delete_id]);
+   // Delete content
+   $conn->prepare("DELETE FROM `content` WHERE id = ?")->execute([$delete_id]);
+
    header('location:contents.php');
-    
+   exit();
 }
 
 if(isset($_POST['delete_comment'])){
 
-   $delete_id = $_POST['comment_id'];
-   $delete_id = filter_var($delete_id, FILTER_SANITIZE_STRING);
+   $delete_id = filter_var($_POST['comment_id'], FILTER_SANITIZE_STRING);
 
    $verify_comment = $conn->prepare("SELECT * FROM `comments` WHERE id = ?");
    $verify_comment->execute([$delete_id]);
 
    if($verify_comment->rowCount() > 0){
-      $delete_comment = $conn->prepare("DELETE FROM `comments` WHERE id = ?");
-      $delete_comment->execute([$delete_id]);
+      $conn->prepare("DELETE FROM `comments` WHERE id = ?")->execute([$delete_id]);
       $message[] = 'Comment deleted successfully!';
-   }else{
+   } else {
       $message[] = 'Comment already deleted!';
    }
-
 }
 
 ?>
@@ -68,22 +74,23 @@ if(isset($_POST['delete_comment'])){
    <meta charset="UTF-8">
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>View content</title>
-
-   <!-- font awesome cdn link  -->
+   <title>View Content</title>
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-
-   <!-- custom css file link  -->
    <link rel="stylesheet" href="../css/admin_style.css">
-
 </head>
 <body>
 
 <?php include '../components/admin_header.php'; ?>
 
+<?php if(!empty($message)): ?>
+   <div class="messages">
+      <?php foreach($message as $msg): ?>
+         <div class="message"><?= $msg; ?></div>
+      <?php endforeach; ?>
+   </div>
+<?php endif; ?>
 
 <section class="view-content">
-
    <?php
       $select_content = $conn->prepare("SELECT * FROM `content` WHERE id = ? AND tutor_id = ?");
       $select_content->execute([$get_id, $tutor_id]);
@@ -91,13 +98,13 @@ if(isset($_POST['delete_comment'])){
          while($fetch_content = $select_content->fetch(PDO::FETCH_ASSOC)){
             $video_id = $fetch_content['id'];
 
-            $count_likes = $conn->prepare("SELECT * FROM `likes` WHERE tutor_id = ? AND content_id = ?");
+            $count_likes = $conn->prepare("SELECT COUNT(*) FROM `likes` WHERE tutor_id = ? AND content_id = ?");
             $count_likes->execute([$tutor_id, $video_id]);
-            $total_likes = $count_likes->rowCount();
+            $total_likes = $count_likes->fetchColumn();
 
-            $count_comments = $conn->prepare("SELECT * FROM `comments` WHERE tutor_id = ? AND content_id = ?");
+            $count_comments = $conn->prepare("SELECT COUNT(*) FROM `comments` WHERE tutor_id = ? AND content_id = ?");
             $count_comments->execute([$tutor_id, $video_id]);
-            $total_comments = $count_comments->rowCount();
+            $total_comments = $count_comments->fetchColumn();
    ?>
    <div class="container">
       <video src="../uploaded_files/<?= $fetch_content['video']; ?>" autoplay controls poster="../uploaded_files/<?= $fetch_content['thumb']; ?>" class="video"></video>
@@ -112,31 +119,26 @@ if(isset($_POST['delete_comment'])){
          <div class="flex-btn">
             <input type="hidden" name="video_id" value="<?= $video_id; ?>">
             <a href="update_content.php?get_id=<?= $video_id; ?>" class="option-btn">Update</a>
-            <input type="submit" value="delete" class="delete-btn" onclick="return confirm('Delete this video?');" name="delete_video">
+            <input type="submit" value="Delete" class="delete-btn" onclick="return confirm('Delete this video?');" name="delete_video">
          </div>
       </form>
    </div>
    <?php
-    }
-   }else{
-      echo '<p class="empty">No contents added yet! <a href="add_content.php" class="btn" style="margin-top: 1.5rem;">add videos</a></p>';
-   }
-      
+         }
+      } else {
+         echo '<p class="empty">No contents added yet! <a href="add_content.php" class="btn" style="margin-top: 1.5rem;">Add Videos</a></p>';
+      }
    ?>
-
 </section>
 
 <section class="comments">
-
-   <h1 class="heading">User comments</h1>
-
-   
+   <h1 class="heading">User Comments</h1>
    <div class="show-comments">
       <?php
          $select_comments = $conn->prepare("SELECT * FROM `comments` WHERE content_id = ?");
          $select_comments->execute([$get_id]);
          if($select_comments->rowCount() > 0){
-            while($fetch_comment = $select_comments->fetch(PDO::FETCH_ASSOC)){   
+            while($fetch_comment = $select_comments->fetch(PDO::FETCH_ASSOC)){
                $select_commentor = $conn->prepare("SELECT * FROM `users` WHERE id = ?");
                $select_commentor->execute([$fetch_comment['user_id']]);
                $fetch_commentor = $select_commentor->fetch(PDO::FETCH_ASSOC);
@@ -152,33 +154,19 @@ if(isset($_POST['delete_comment'])){
          <p class="text"><?= $fetch_comment['comment']; ?></p>
          <form action="" method="post" class="flex-btn">
             <input type="hidden" name="comment_id" value="<?= $fetch_comment['id']; ?>">
-            <button type="submit" name="delete_comment" class="inline-delete-btn" onclick="return confirm('Delete this comment?');">delete comment</button>
+            <button type="submit" name="delete_comment" class="inline-delete-btn" onclick="return confirm('Delete this comment?');">Delete Comment</button>
          </form>
       </div>
       <?php
-       }
-      }else{
-         echo '<p class="empty">No comments added yet!</p>';
-      }
+            }
+         } else {
+            echo '<p class="empty">No comments added yet!</p>';
+         }
       ?>
-      </div>
-   
+   </div>
 </section>
 
-
-
-
-
-
-
-
-
-
-
-
 <?php include '../components/footer.php'; ?>
-
 <script src="../js/admin_script.js"></script>
-
 </body>
 </html>

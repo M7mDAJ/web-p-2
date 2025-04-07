@@ -1,9 +1,13 @@
 <?php
 
-   include 'connect.php';
+// Include database connection
+include 'connect.php';
 
-   setcookie('user_id', '', time() - 1, '/');
+// Delete user_id cookie
+setcookie('user_id', '', time() - 3600, '/', '', false, true);
 
-   header('location:../home.php');
+// Redirect to home page
+header('Location: ../home.php');
+exit;
 
-?>  
+?>

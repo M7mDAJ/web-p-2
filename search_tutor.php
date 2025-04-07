@@ -20,10 +20,8 @@ if(isset($_COOKIE['user_id'])){
 
    <!-- font awesome cdn link  -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-
    <!-- custom css file link  -->
    <link rel="stylesheet" href="css/style.css">
-
 </head>
 <body>
 
@@ -34,44 +32,47 @@ if(isset($_COOKIE['user_id'])){
    <h1 class="heading">Expert tutors</h1>
 
    <form action="" method="post" class="search-tutor">
-      <input type="text" name="search_tutor" maxlength="100" placeholder="search tutor..." required>
+      <input type="text" name="search_tutor" maxlength="100" placeholder="Search tutor..." required>
       <button type="submit" name="search_tutor_btn" class="fas fa-search"></button>
    </form>
 
    <div class="box-container">
 
       <?php
-         if(isset($_POST['search_tutor']) or isset($_POST['search_tutor_btn'])){
-            $search_tutor = $_POST['search_tutor'];
-            $select_tutors = $conn->prepare("SELECT * FROM `tutors` WHERE name LIKE '%{$search_tutor}%'");
-            $select_tutors->execute();
-            if($select_tutors->rowCount() > 0){
-               while($fetch_tutor = $select_tutors->fetch(PDO::FETCH_ASSOC)){
+      if(isset($_POST['search_tutor']) || isset($_POST['search_tutor_btn'])){
+         $search_tutor = filter_var($_POST['search_tutor'], FILTER_SANITIZE_STRING);
+         $search_param = "%{$search_tutor}%";
 
-                  $tutor_id = $fetch_tutor['id'];
+         $select_tutors = $conn->prepare("SELECT * FROM `tutors` WHERE name LIKE ?");
+         $select_tutors->execute([$search_param]);
 
-                  $count_playlists = $conn->prepare("SELECT * FROM `playlist` WHERE tutor_id = ?");
-                  $count_playlists->execute([$tutor_id]);
-                  $total_playlists = $count_playlists->rowCount();
+         if($select_tutors->rowCount() > 0){
+            while($fetch_tutor = $select_tutors->fetch(PDO::FETCH_ASSOC)){
 
-                  $count_contents = $conn->prepare("SELECT * FROM `content` WHERE tutor_id = ?");
-                  $count_contents->execute([$tutor_id]);
-                  $total_contents = $count_contents->rowCount();
+               $tutor_id = $fetch_tutor['id'];
 
-                  $count_likes = $conn->prepare("SELECT * FROM `likes` WHERE tutor_id = ?");
-                  $count_likes->execute([$tutor_id]);
-                  $total_likes = $count_likes->rowCount();
+               $count_playlists = $conn->prepare("SELECT COUNT(*) FROM `playlist` WHERE tutor_id = ?");
+               $count_playlists->execute([$tutor_id]);
+               $total_playlists = $count_playlists->fetchColumn();
 
-                  $count_comments = $conn->prepare("SELECT * FROM `comments` WHERE tutor_id = ?");
-                  $count_comments->execute([$tutor_id]);
-                  $total_comments = $count_comments->rowCount();
+               $count_contents = $conn->prepare("SELECT COUNT(*) FROM `content` WHERE tutor_id = ?");
+               $count_contents->execute([$tutor_id]);
+               $total_contents = $count_contents->fetchColumn();
+
+               $count_likes = $conn->prepare("SELECT COUNT(*) FROM `likes` WHERE tutor_id = ?");
+               $count_likes->execute([$tutor_id]);
+               $total_likes = $count_likes->fetchColumn();
+
+               $count_comments = $conn->prepare("SELECT COUNT(*) FROM `comments` WHERE tutor_id = ?");
+               $count_comments->execute([$tutor_id]);
+               $total_comments = $count_comments->fetchColumn();
       ?>
       <div class="box">
          <div class="tutor">
             <img src="uploaded_files/<?= $fetch_tutor['image']; ?>" alt="">
             <div>
-               <h3><?= $fetch_tutor['name']; ?></h3>
-               <span><?= $fetch_tutor['profession']; ?></span>
+               <h3><?= htmlspecialchars($fetch_tutor['name']); ?></h3>
+               <span><?= htmlspecialchars($fetch_tutor['profession']); ?></span>
             </div>
          </div>
          <p>Playlists : <span><?= $total_playlists; ?></span></p>
@@ -79,39 +80,27 @@ if(isset($_COOKIE['user_id'])){
          <p>Total likes : <span><?= $total_likes ?></span></p>
          <p>Total comments : <span><?= $total_comments ?></span></p>
          <form action="tutor_profile.php" method="post">
-            <input type="hidden" name="tutor_email" value="<?= $fetch_tutor['email']; ?>">
-            <input type="submit" value="view profile" name="tutor_fetch" class="inline-btn">
+            <input type="hidden" name="tutor_email" value="<?= htmlspecialchars($fetch_tutor['email']); ?>">
+            <input type="submit" value="View profile" name="tutor_fetch" class="inline-btn">
          </form>
       </div>
       <?php
-               }
-            }else{
-               echo '<p class="empty">No results found!</p>';
             }
-         }else{
-            echo '<p class="empty">Please search something!</p>';
+         } else {
+            echo '<p class="empty">No tutors found matching your search.</p>';
          }
+      } else {
+         echo '<p class="empty">Please enter a tutor name to search.</p>';
+      }
       ?>
 
    </div>
 
 </section>
 
-<!-- teachers section ends -->
-
-
-
-
-
-
-
-
-
-
 <?php include 'components/footer.php'; ?>
 
-<!-- custom js file link  -->
 <script src="js/script.js"></script>
-   
+
 </body>
 </html>

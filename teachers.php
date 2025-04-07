@@ -23,7 +23,6 @@ if(isset($_COOKIE['user_id'])){
 
    <!-- custom css file link  -->
    <link rel="stylesheet" href="css/style.css">
-
 </head>
 <body>
 
@@ -33,7 +32,10 @@ if(isset($_COOKIE['user_id'])){
 
 <section class="teachers">
 
-   <h1 class="heading">Expert tutors</h1>
+   <?php
+      $count_tutors = $conn->query("SELECT COUNT(*) FROM `tutors`")->fetchColumn();
+   ?>
+   <h1 class="heading">Expert tutors (<?= $count_tutors; ?>)</h1>
 
    <form action="search_tutor.php" method="post" class="search-tutor">
       <input type="text" name="search_tutor" maxlength="100" placeholder="search tutor..." required>
@@ -44,7 +46,7 @@ if(isset($_COOKIE['user_id'])){
 
       <div class="box offer">
          <h3>Become a tutor</h3>
-         <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Laborum, magnam!</p>
+         <p>Join our platform and start sharing your knowledge today!</p>
          <a href="admin/register.php" class="inline-btn">get started</a>
       </div>
 
@@ -56,28 +58,30 @@ if(isset($_COOKIE['user_id'])){
 
                $tutor_id = $fetch_tutor['id'];
 
-               $count_playlists = $conn->prepare("SELECT * FROM `playlist` WHERE tutor_id = ?");
+               $count_playlists = $conn->prepare("SELECT COUNT(*) FROM `playlist` WHERE tutor_id = ?");
                $count_playlists->execute([$tutor_id]);
-               $total_playlists = $count_playlists->rowCount();
+               $total_playlists = $count_playlists->fetchColumn();
 
-               $count_contents = $conn->prepare("SELECT * FROM `content` WHERE tutor_id = ?");
+               $count_contents = $conn->prepare("SELECT COUNT(*) FROM `content` WHERE tutor_id = ?");
                $count_contents->execute([$tutor_id]);
-               $total_contents = $count_contents->rowCount();
+               $total_contents = $count_contents->fetchColumn();
 
-               $count_likes = $conn->prepare("SELECT * FROM `likes` WHERE tutor_id = ?");
+               $count_likes = $conn->prepare("SELECT COUNT(*) FROM `likes` WHERE tutor_id = ?");
                $count_likes->execute([$tutor_id]);
-               $total_likes = $count_likes->rowCount();
+               $total_likes = $count_likes->fetchColumn();
 
-               $count_comments = $conn->prepare("SELECT * FROM `comments` WHERE tutor_id = ?");
+               $count_comments = $conn->prepare("SELECT COUNT(*) FROM `comments` WHERE tutor_id = ?");
                $count_comments->execute([$tutor_id]);
-               $total_comments = $count_comments->rowCount();
+               $total_comments = $count_comments->fetchColumn();
       ?>
       <div class="box">
          <div class="tutor">
-            <img src="uploaded_files/<?= $fetch_tutor['image']; ?>" alt="">
+            <?php if (!empty($fetch_tutor['image']) && file_exists('uploaded_files/' . $fetch_tutor['image'])): ?>
+               <img src="uploaded_files/<?= htmlspecialchars($fetch_tutor['image']); ?>" alt="">
+            <?php endif; ?>
             <div>
-               <h3><?= $fetch_tutor['name']; ?></h3>
-               <span><?= $fetch_tutor['profession']; ?></span>
+               <h3><?= htmlspecialchars($fetch_tutor['name']); ?></h3>
+               <span><?= htmlspecialchars($fetch_tutor['profession']); ?></span>
             </div>
          </div>
          <p>Playlists : <span><?= $total_playlists; ?></span></p>
@@ -85,14 +89,14 @@ if(isset($_COOKIE['user_id'])){
          <p>Total likes : <span><?= $total_likes ?></span></p>
          <p>Total comments : <span><?= $total_comments ?></span></p>
          <form action="tutor_profile.php" method="post">
-            <input type="hidden" name="tutor_email" value="<?= $fetch_tutor['email']; ?>">
+            <input type="hidden" name="tutor_email" value="<?= htmlspecialchars($fetch_tutor['email']); ?>">
             <input type="submit" value="view profile" name="tutor_fetch" class="inline-btn">
          </form>
       </div>
       <?php
             }
          }else{
-            echo '<p class="empty">no tutors found!</p>';
+            echo '<p class="empty">No tutors found. Why not be the first to join?</p>';
          }
       ?>
 
@@ -102,39 +106,10 @@ if(isset($_COOKIE['user_id'])){
 
 <!-- teachers section ends -->
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <?php include 'components/footer.php'; ?>    
 
 <!-- custom js file link  -->
 <script src="js/script.js"></script>
-   
+
 </body>
 </html>

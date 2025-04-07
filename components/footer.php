@@ -1,5 +1,3 @@
 <footer class="footer">
-
-   &copy; copyright @ <?= date('Y'); ?> by <span>ali, mohammed, kawther</span> | all rights reserved!
-
+   &copy; <?= date('Y'); ?> by <span class="footer-content"><?= htmlspecialchars("Ali, Mohammed, Kawther"); ?></span> | All rights reserved!
 </footer>
