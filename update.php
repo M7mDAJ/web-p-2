@@ -1,16 +1,21 @@
 <?php
 
+// Include database connection
 include 'components/connect.php';
 
+// Check if user is logged in using cookie
 if(isset($_COOKIE['user_id'])){
    $user_id = $_COOKIE['user_id'];
 }else{
    $user_id = '';
+   // Redirect to login if not logged in
    header('location:login.php');
 }
 
+// Handle form submission
 if(isset($_POST['submit'])){
 
+   // Fetch current user data
    $select_user = $conn->prepare("SELECT * FROM `users` WHERE id = ? LIMIT 1");
    $select_user->execute([$user_id]);
    $fetch_user = $select_user->fetch(PDO::FETCH_ASSOC);
@@ -18,10 +23,7 @@ if(isset($_POST['submit'])){
    $prev_pass = $fetch_user['password'];
    $prev_image = $fetch_user['image'];
 
-   if(empty($prev_image) || !file_exists('uploaded_files/'.$prev_image)){
-      $prev_image = 'default-user.png';
-   }
-
+   // Sanitize and update name if provided
    $name = $_POST['name'];
    $name = filter_var($name, FILTER_SANITIZE_STRING);
 
@@ -31,12 +33,13 @@ if(isset($_POST['submit'])){
       $message[] = 'username updated successfully!';
    }
 
+   // Sanitize and update email if provided
    $email = $_POST['email'];
    $email = filter_var($email, FILTER_SANITIZE_STRING);
 
    if(!empty($email)){
-      $select_email = $conn->prepare("SELECT email FROM `users` WHERE email = ? AND id != ?");
-      $select_email->execute([$email, $user_id]);
+      $select_email = $conn->prepare("SELECT email FROM `users` WHERE email = ?");
+      $select_email->execute([$email]);
       if($select_email->rowCount() > 0){
          $message[] = 'email already taken!';
       }else{
@@ -46,6 +49,7 @@ if(isset($_POST['submit'])){
       }
    }
 
+   // Handle image upload and update
    $image = $_FILES['image']['name'];
    $image = filter_var($image, FILTER_SANITIZE_STRING);
    $ext = pathinfo($image, PATHINFO_EXTENSION);
@@ -61,14 +65,16 @@ if(isset($_POST['submit'])){
          $update_image = $conn->prepare("UPDATE `users` SET `image` = ? WHERE id = ?");
          $update_image->execute([$rename, $user_id]);
          move_uploaded_file($image_tmp_name, $image_folder);
-         if(!empty($prev_image) && $prev_image != $rename && file_exists('uploaded_files/'.$prev_image) && $prev_image != 'default-user.png'){
+         // Delete previous image if different
+         if($prev_image != '' AND $prev_image != $rename){
             unlink('uploaded_files/'.$prev_image);
          }
          $message[] = 'image updated successfully!';
       }
    }
 
-   $empty_pass = 'da39a3ee5e6b4b0d3255bfef95601890afd80709';
+   // Password update logic
+   $empty_pass = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'; // SHA1 of empty string
    $old_pass = sha1($_POST['old_pass']);
    $old_pass = filter_var($old_pass, FILTER_SANITIZE_STRING);
    $new_pass = sha1($_POST['new_pass']);
@@ -93,7 +99,6 @@ if(isset($_POST['submit'])){
    }
 
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -104,30 +109,29 @@ if(isset($_POST['submit'])){
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Update profile</title>
 
-   <!-- font awesome cdn link  -->
+   <!-- font awesome cdn link -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 
-   <!-- custom css file link  -->
-   <link rel="stylesheet" href="css/style.css">
+   <!-- custom css file link (changed to style1.css as requested) -->
+   <link rel="stylesheet" href="css/style1.css">
 
 </head>
 <body>
 
+<!-- Include user header -->
 <?php include 'components/user_header.php'; ?>
 
+<!-- update profile form section -->
 <section class="form-container" style="min-height: calc(100vh - 19rem);">
 
    <form action="" method="post" enctype="multipart/form-data">
       <h3>Update profile</h3>
-      <div style="text-align: center;">
-         <img src="uploaded_files/<?= htmlspecialchars($prev_image); ?>" alt="User Avatar" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem;">
-      </div>
       <div class="flex">
          <div class="col">
             <p>Full name</p>
-            <input type="text" name="name" placeholder="<?= $fetch_user['name']; ?>" maxlength="100" class="box">
+            <input type="text" name="name" placeholder="<?= $fetch_profile['name']; ?>" maxlength="100" class="box">
             <p>Email address</p>
-            <input type="email" name="email" placeholder="<?= $fetch_user['email']; ?>" maxlength="100" class="box">
+            <input type="email" name="email" placeholder="<?= $fetch_profile['email']; ?>" maxlength="100" class="box">
             <p>Update avatar</p>
             <input type="file" name="image" accept="image/*" class="box">
          </div>
@@ -145,9 +149,11 @@ if(isset($_POST['submit'])){
 
 </section>
 
+<!-- Include footer -->
 <?php include 'components/footer.php'; ?>
 
+<!-- custom js file link -->
 <script src="js/script.js"></script>
-
+   
 </body>
 </html>

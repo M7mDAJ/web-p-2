@@ -1,94 +1,92 @@
+// Select the <body> element
 let body = document.body;
 
+// Select the user profile element inside the header
 let profile = document.querySelector('.header .flex .profile');
+
+// Toggle profile visibility when the user button is clicked
+document.querySelector('#user-btn').onclick = () =>{
+   profile.classList.toggle('active'); // Show/hide profile menu
+   searchForm.classList.remove('active'); // Ensure search form is hidden
+}
+
+// Select the search form inside the header
 let searchForm = document.querySelector('.header .flex .search-form');
+
+// Toggle search form visibility when the search button is clicked
+document.querySelector('#search-btn').onclick = () =>{
+   searchForm.classList.toggle('active'); // Show/hide search form
+   profile.classList.remove('active'); // Ensure profile menu is hidden
+}
+
+// Select the sidebar element
 let sideBar = document.querySelector('.side-bar');
 
-const userBtn = document.querySelector('#user-btn');
-const searchBtn = document.querySelector('#search-btn');
-const menuBtn = document.querySelector('#menu-btn');
-const closeSidebarBtn = document.querySelector('.side-bar .close-side-bar');
-const toggleBtn = document.querySelector('#toggle-btn');
-
-// Toggle user profile
-if (userBtn) {
-   userBtn.onclick = () => {
-      profile.classList.toggle('active');
-      searchForm.classList.remove('active');
-   };
+// Toggle sidebar visibility and body state when the menu button is clicked
+document.querySelector('#menu-btn').onclick = () =>{
+   sideBar.classList.toggle('active'); // Show/hide sidebar
+   body.classList.toggle('active'); // Toggle body state (possibly for overlay or scroll lock)
 }
 
-// Toggle search form
-if (searchBtn) {
-   searchBtn.onclick = () => {
-      searchForm.classList.toggle('active');
-      profile.classList.remove('active');
-   };
+// Close the sidebar when the close button is clicked
+document.querySelector('.side-bar .close-side-bar').onclick = () =>{
+   sideBar.classList.remove('active'); // Hide sidebar
+   body.classList.remove('active'); // Remove body overlay or scroll lock
 }
 
-// Toggle sidebar
-if (menuBtn) {
-   menuBtn.onclick = () => {
-      sideBar.classList.toggle('active');
-      body.classList.toggle('active');
-   };
-}
+// Enforce maxLength constraint for all number input fields
+document.querySelectorAll('input[type="number"]').forEach(InputNumber => {
+   InputNumber.oninput = () =>{
+      // If input exceeds allowed maxLength, trim the value
+      if(InputNumber.value.length > InputNumber.maxLength) 
+         InputNumber.value = InputNumber.value.slice(0, InputNumber.maxLength);
+   }
+});
 
-// Close sidebar
-if (closeSidebarBtn) {
-   closeSidebarBtn.onclick = () => {
+// Handle scroll events
+window.onscroll = () =>{
+   // Hide profile and search form on scroll
+   profile.classList.remove('active');
+   searchForm.classList.remove('active');
+
+   // For smaller screens, also hide sidebar and body active state
+   if(window.innerWidth < 1200){
       sideBar.classList.remove('active');
       body.classList.remove('active');
-   };
+   }
 }
 
-// Limit number input length
-document.querySelectorAll('input[type="number"]').forEach(input => {
-   input.addEventListener('input', () => {
-      const maxLength = input.getAttribute('maxlength');
-      if (maxLength && input.value.length > maxLength) {
-         input.value = input.value.slice(0, maxLength);
-      }
-   });
-});
+// Select the dark/light mode toggle button
+let toggleBtn = document.querySelector('#toggle-btn');
 
-// Close popups when clicking outside
-window.addEventListener('click', (e) => {
-   if (!profile.contains(e.target) && !userBtn.contains(e.target)) {
-      profile.classList.remove('active');
-   }
-   if (!searchForm.contains(e.target) && !searchBtn.contains(e.target)) {
-      searchForm.classList.remove('active');
-   }
-});
-
-// Smart scroll handler (throttle)
-let scrollTimeout;
-window.addEventListener('scroll', () => {
-   clearTimeout(scrollTimeout);
-   scrollTimeout = setTimeout(() => {
-      profile.classList.remove('active');
-      searchForm.classList.remove('active');
-
-      if (window.innerWidth < 1200) {
-         sideBar.classList.remove('active');
-         body.classList.remove('active');
-      }
-   }, 100);
-});
-
-// Dark mode toggle
+// Retrieve the current dark mode setting from localStorage
 let darkMode = localStorage.getItem('dark-mode');
 
-const setDarkMode = (enable) => {
-   toggleBtn.classList.replace(enable ? 'fa-sun' : 'fa-moon', enable ? 'fa-moon' : 'fa-sun');
-   body.classList.toggle('dark', enable);
-   localStorage.setItem('dark-mode', enable ? 'enabled' : 'disabled');
-};
+// Function to enable dark mode
+const enabelDarkMode = () =>{
+   toggleBtn.classList.replace('fa-sun', 'fa-moon'); // Update icon
+   body.classList.add('dark'); // Add dark class to body
+   localStorage.setItem('dark-mode', 'enabled'); // Save preference
+}
 
-if (darkMode === 'enabled') setDarkMode(true);
+// Function to disable dark mode
+const disableDarkMode = () =>{
+   toggleBtn.classList.replace('fa-moon', 'fa-sun'); // Update icon
+   body.classList.remove('dark'); // Remove dark class from body
+   localStorage.setItem('dark-mode', 'disabled'); // Save preference
+}
 
-toggleBtn?.addEventListener('click', () => {
-   const isDark = localStorage.getItem('dark-mode') === 'enabled';
-   setDarkMode(!isDark);
-});
+// Apply dark mode if previously enabled
+if(darkMode === 'enabled'){
+   enabelDarkMode();
+}
+
+// Toggle dark/light mode when toggle button is clicked
+toggleBtn.onclick = (e) =>{
+   let darkMode = localStorage.getItem('dark-mode');
+   if(darkMode === 'disabled'){
+      enabelDarkMode();
+   }else{
+      disableDarkMode();
+   }
+}

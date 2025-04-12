@@ -1,74 +1,62 @@
 <?php
 
-include '../components/connect.php';
+include '../components/connect.php'; // Includes the database connection file
 
+// Check if the form is submitted
 if(isset($_POST['submit'])){
 
+   // Generate a unique ID for the tutor
    $id = unique_id();
-   $name = filter_var($_POST['name'], FILTER_SANITIZE_STRING);
-   $profession = filter_var($_POST['profession'], FILTER_SANITIZE_STRING);
-   $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
-   $password = $_POST['pass'];
-   $confirm_password = $_POST['cpass'];
 
-   // ✅ التحقق من صحة البريد الإلكتروني
-   if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-      $message[] = 'Invalid email format!';
-   }
-   // ✅ التحقق من تطابق كلمة المرور
-   elseif ($password !== $confirm_password) {
-      $message[] = 'Confirm password does not match!';
-   }
-   else {
-      // ✅ التحقق من عدم تكرار البريد الإلكتروني
-      $select_tutor = $conn->prepare("SELECT COUNT(*) FROM `tutors` WHERE email = ?");
-      $select_tutor->execute([$email]);
-      
-      if($select_tutor->fetchColumn() > 0){
-         $message[] = 'Email already taken!';
-      } else {
-         // ✅ تأمين كلمة المرور
-         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+   // Sanitize input data
+   $name = $_POST['name'];
+   $name = filter_var($name, FILTER_SANITIZE_STRING);
+   
+   $profession = $_POST['profession'];
+   $profession = filter_var($profession, FILTER_SANITIZE_STRING);
 
-         // ✅ التحقق من تحميل الصورة
-         if(isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-            $image_name = $_FILES['image']['name'];
-            $image_tmp_name = $_FILES['image']['tmp_name'];
-            $image_size = $_FILES['image']['size'];
-            $image_ext = strtolower(pathinfo($image_name, PATHINFO_EXTENSION));
-            $allowed_exts = ['jpg', 'jpeg', 'png', 'gif'];
-            $rename = unique_id().'.'.$image_ext;
-            $image_folder = '../uploaded_files/'.$rename;
+   $email = $_POST['email'];
+   $email = filter_var($email, FILTER_SANITIZE_STRING);
 
-            // ✅ التحقق من صيغة الصورة
-            if (!in_array($image_ext, $allowed_exts)) {
-               $message[] = 'Invalid image format! Only JPG, JPEG, PNG, GIF allowed.';
-            }
-            // ✅ التحقق من حجم الصورة (مثلاً، لا يزيد عن 2MB)
-            elseif ($image_size > 2 * 1024 * 1024) {
-               $message[] = 'Image size is too large! Max 2MB allowed.';
-            }
-            // ✅ التأكد من أن الملف هو صورة حقيقية
-            elseif (!in_array(mime_content_type($image_tmp_name), ['image/jpeg', 'image/png', 'image/gif'])) {
-               $message[] = 'Invalid image type!';
-            }
-            else {
-               // ✅ رفع الصورة
-               if(move_uploaded_file($image_tmp_name, $image_folder)) {
-                  // ✅ إدخال البيانات في قاعدة البيانات
-                  $insert_tutor = $conn->prepare("INSERT INTO `tutors`(id, name, profession, email, password, image) VALUES(?,?,?,?,?,?)");
-                  $insert_tutor->execute([$id, $name, $profession, $email, $hashed_password, $rename]);
+   // Hash the password and confirm password using sha1
+   $pass = sha1($_POST['pass']);
+   $pass = filter_var($pass, FILTER_SANITIZE_STRING);
+   $cpass = sha1($_POST['cpass']);
+   $cpass = filter_var($cpass, FILTER_SANITIZE_STRING);
 
-                  $message[] = 'New tutor registered! Please login now';
-               } else {
-                  $message[] = 'Failed to upload image!';
-               }
-            }
-         } else {
-            $message[] = 'Please select a valid avatar!';
-         }
+   // Handle the uploaded image
+   $image = $_FILES['image']['name'];
+   $image = filter_var($image, FILTER_SANITIZE_STRING);
+   $ext = pathinfo($image, PATHINFO_EXTENSION); // Get the file extension of the image
+   $rename = unique_id().'.'.$ext; // Create a new unique name for the image
+   $image_size = $_FILES['image']['size']; // Get the size of the uploaded image
+   $image_tmp_name = $_FILES['image']['tmp_name']; // Temporary location of the uploaded image
+   $image_folder = '../uploaded_files/'.$rename; // Path where the image will be saved
+
+   // Check if the email already exists in the database
+   $select_tutor = $conn->prepare("SELECT * FROM `tutors` WHERE email = ?");
+   $select_tutor->execute([$email]);
+
+   // If email is already taken, show a message
+   if($select_tutor->rowCount() > 0){
+      $message[] = 'email already taken!';
+   }else{
+      // Check if passwords match
+      if($pass != $cpass){
+         $message[] = 'confirm password not matched!';
+      }else{
+         // Insert the tutor's data into the database
+         $insert_tutor = $conn->prepare("INSERT INTO `tutors`(id, name, profession, email, password, image) VALUES(?,?,?,?,?,?)");
+         $insert_tutor->execute([$id, $name, $profession, $email, $cpass, $rename]);
+
+         // Move the uploaded image to the desired folder
+         move_uploaded_file($image_tmp_name, $image_folder);
+         
+         // Show success message
+         $message[] = 'new tutor registered! please login now';
       }
    }
+
 }
 
 ?>
@@ -81,20 +69,22 @@ if(isset($_POST['submit'])){
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Register</title>
 
-   <!-- Font Awesome CDN -->
+   <!-- font awesome cdn link  -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 
-   <!-- Custom CSS -->
+   <!-- custom css file link  -->
    <link rel="stylesheet" href="../css/admin_style.css">
+
 </head>
 <body style="padding-left: 0;">
 
 <?php
+// Display messages (errors or success)
 if(isset($message)){
-   foreach($message as $msg){
+   foreach($message as $message){
       echo '
       <div class="message form">
-         <span>'.$msg.'</span>
+         <span>'.$message.'</span>
          <i class="fas fa-times" onclick="this.parentElement.remove();"></i>
       </div>
       ';
@@ -102,17 +92,19 @@ if(isset($message)){
 }
 ?>
 
-<!-- Register section starts -->
+<!-- Registration form -->
 <section class="form-container">
+
    <form class="register" action="" method="post" enctype="multipart/form-data">
-      <h3>Register New</h3>
+      <h3>Register new</h3>
       <div class="flex">
          <div class="col">
-            <p>Full Name <span>*</span></p>
-            <input type="text" name="name" placeholder="Enter your name" maxlength="50" required class="box">
-            <p>Your Profession <span>*</span></p>
+            <p>Full name<span>*</span></p>
+            <input type="text" name="name" placeholder="enter your name" maxlength="50" required class="box">
+            <p>Your profession <span>*</span></p>
             <select name="profession" class="box" required>
-               <option value="" disabled selected>-- Select your profession --</option>
+               <option value="" disabled selected>-- Select your profession</option>
+               <!-- Various profession options -->
                <option value="developer">Developer</option>
                <option value="designer">Designer</option>
                <option value="musician">Musician</option>
@@ -125,22 +117,46 @@ if(isset($message)){
                <option value="journalist">Journalist</option>
                <option value="photographer">Photographer</option>
             </select>
-            <p>Email Address <span>*</span></p>
-            <input type="email" name="email" placeholder="Enter your email" maxlength="50" required class="box">
+            <p>Email address<span>*</span></p>
+            <input type="email" name="email" placeholder="Enter your email" maxlength="20" required class="box">
          </div>
          <div class="col">
             <p>Password <span>*</span></p>
-            <input type="password" name="pass" placeholder="Enter your password" maxlength="50" required class="box">
-            <p>Confirm Password <span>*</span></p>
-            <input type="password" name="cpass" placeholder="Confirm your password" maxlength="50" required class="box">
-            <p>Select Avatar <span>*</span></p>
+            <input type="password" name="pass" placeholder="Enter your password" maxlength="20" required class="box">
+            <p>Confirm password <span>*</span></p>
+            <input type="password" name="cpass" placeholder="Confirm your password" maxlength="20" required class="box">
+            <p>Select avatar <span>*</span></p>
             <input type="file" name="image" accept="image/*" required class="box">
          </div>
       </div>
       <p class="link">Already have an account? <a href="login.php">Login now</a></p>
-      <input type="submit" name="submit" value="Register Now" class="btn">
+      <input type="submit" name="submit" value="register now" class="btn">
    </form>
+
 </section>
 
+<script>
+// Dark mode script
+let darkMode = localStorage.getItem('dark-mode');
+let body = document.body;
+
+const enableDarkMode = () => {
+   body.classList.add('dark');
+   localStorage.setItem('dark-mode', 'enabled');
+}
+
+const disableDarkMode = () => {
+   body.classList.remove('dark');
+   localStorage.setItem('dark-mode', 'disabled');
+}
+
+if(darkMode === 'enabled'){
+   enableDarkMode();
+}else{
+   disableDarkMode();
+}
+
+</script>
+   
 </body>
 </html>
