@@ -1,25 +1,30 @@
 <?php
 
+// Include the database connection
 include 'components/connect.php';
 
+// Check for user session via cookie
 if(isset($_COOKIE['user_id'])){
    $user_id = $_COOKIE['user_id'];
 }else{
    $user_id = '';
+   // Redirect to home if not logged in
    header('location:home.php');
-   exit;
 }
 
+// Handle removing a like
 if(isset($_POST['remove'])){
 
    if($user_id != ''){
       $content_id = $_POST['content_id'];
       $content_id = filter_var($content_id, FILTER_SANITIZE_STRING);
 
+      // Check if the content is actually liked by this user
       $verify_likes = $conn->prepare("SELECT * FROM `likes` WHERE user_id = ? AND content_id = ?");
       $verify_likes->execute([$user_id, $content_id]);
 
       if($verify_likes->rowCount() > 0){
+         // Remove like if found
          $remove_likes = $conn->prepare("DELETE FROM `likes` WHERE user_id = ? AND content_id = ?");
          $remove_likes->execute([$user_id, $content_id]);
          $message[] = 'Removed from likes!';
@@ -27,6 +32,7 @@ if(isset($_POST['remove'])){
    }else{
       $message[] = 'Please login first!';
    }
+
 }
 
 ?>
@@ -39,19 +45,19 @@ if(isset($_POST['remove'])){
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Liked videos</title>
 
-   <!-- font awesome cdn link  -->
+   <!-- Font Awesome for icons -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 
-   <!-- custom css file link  -->
-   <link rel="stylesheet" href="css/style.css">
+   <!-- Custom CSS file -->
+   <link rel="stylesheet" href="css/style1.css">
 
 </head>
 <body>
 
+<!-- Include the user header -->
 <?php include 'components/user_header.php'; ?>
 
-<!-- courses section starts  -->
-
+<!-- Liked videos section starts -->
 <section class="liked-videos">
 
    <h1 class="heading">Liked videos</h1>
@@ -59,21 +65,26 @@ if(isset($_POST['remove'])){
    <div class="box-container">
 
    <?php
+      // Fetch liked content by user
       $select_likes = $conn->prepare("SELECT * FROM `likes` WHERE user_id = ?");
       $select_likes->execute([$user_id]);
+
       if($select_likes->rowCount() > 0){
          while($fetch_likes = $select_likes->fetch(PDO::FETCH_ASSOC)){
 
+            // Fetch content details
             $select_contents = $conn->prepare("SELECT * FROM `content` WHERE id = ? ORDER BY date DESC");
             $select_contents->execute([$fetch_likes['content_id']]);
 
             if($select_contents->rowCount() > 0){
                while($fetch_contents = $select_contents->fetch(PDO::FETCH_ASSOC)){
 
-                  $select_tutors = $conn->prepare("SELECT * FROM `tutors` WHERE id = ?");
-                  $select_tutors->execute([$fetch_contents['tutor_id']]);
-                  $fetch_tutor = $select_tutors->fetch(PDO::FETCH_ASSOC);
+               // Fetch tutor info
+               $select_tutors = $conn->prepare("SELECT * FROM `tutors` WHERE id = ?");
+               $select_tutors->execute([$fetch_contents['tutor_id']]);
+               $fetch_tutor = $select_tutors->fetch(PDO::FETCH_ASSOC);
    ?>
+   <!-- Display a liked video box -->
    <div class="box">
       <div class="tutor">
          <img src="uploaded_files/<?= $fetch_tutor['image']; ?>" alt="">
@@ -104,10 +115,12 @@ if(isset($_POST['remove'])){
    </div>
 
 </section>
+<!-- Liked videos section ends -->
 
+<!-- Include the footer -->
 <?php include 'components/footer.php'; ?>
 
-<!-- custom js file link  -->
+<!-- Custom JavaScript -->
 <script src="js/script.js"></script>
    
 </body>

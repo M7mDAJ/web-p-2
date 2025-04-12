@@ -1,71 +1,113 @@
+// Get a reference to the <body> element
 let body = document.body;
 
-const profile = document.querySelector('.header .flex .profile');
-const searchForm = document.querySelector('.header .flex .search-form');
-const sideBar = document.querySelector('.side-bar');
-const userBtn = document.querySelector('#user-btn');
-const searchBtn = document.querySelector('#search-btn');
-const menuBtn = document.querySelector('#menu-btn');
-const closeSidebarBtn = document.querySelector('.side-bar .close-side-bar');
-const toggleBtn = document.querySelector('#toggle-btn');
+// Select the user profile element inside the header
+let profile = document.querySelector('.header .flex .profile');
 
-// Toggle user profile
-userBtn?.addEventListener('click', () => {
-   profile?.classList.toggle('active');
-   searchForm?.classList.remove('active');
-});
+// When the user button is clicked:
+document.querySelector('#user-btn').onclick = () =>{
+   // Toggle the visibility of the profile menu
+   profile.classList.toggle('active');
 
-// Toggle search form
-searchBtn?.addEventListener('click', () => {
-   searchForm?.classList.toggle('active');
-   profile?.classList.remove('active');
-});
-
-// Toggle sidebar
-menuBtn?.addEventListener('click', () => {
-   sideBar?.classList.toggle('active');
-   body.classList.toggle('active');
-});
-
-// Close sidebar
-closeSidebarBtn?.addEventListener('click', () => {
-   sideBar?.classList.remove('active');
-   body.classList.remove('active');
-});
-
-// Scroll handler with basic debounce
-let scrollTimeout;
-window.addEventListener('scroll', () => {
-   clearTimeout(scrollTimeout);
-   scrollTimeout = setTimeout(() => {
-      profile?.classList.remove('active');
-      searchForm?.classList.remove('active');
-
-      if (window.innerWidth < 1200) {
-         sideBar?.classList.remove('active');
-         body.classList.remove('active');
-      }
-   }, 100);
-});
-
-// Dark mode
-const enableDarkMode = () => {
-   toggleBtn?.classList.replace('fa-sun', 'fa-moon');
-   body.classList.add('dark');
-   localStorage.setItem('dark-mode', 'enabled');
-};
-
-const disableDarkMode = () => {
-   toggleBtn?.classList.replace('fa-moon', 'fa-sun');
-   body.classList.remove('dark');
-   localStorage.setItem('dark-mode', 'disabled');
-};
-
-if (localStorage.getItem('dark-mode') === 'enabled') {
-   enableDarkMode();
+   // Ensure the search form is hidden
+   searchForm.classList.remove('active');
 }
 
-toggleBtn?.addEventListener('click', () => {
-   const isEnabled = localStorage.getItem('dark-mode') === 'enabled';
-   isEnabled ? disableDarkMode() : enableDarkMode();
-});
+// Select the search form element inside the header
+let searchForm = document.querySelector('.header .flex .search-form');
+
+// When the search button is clicked:
+document.querySelector('#search-btn').onclick = () =>{
+   // Toggle the visibility of the search form
+   searchForm.classList.toggle('active');
+
+   // Ensure the profile menu is hidden
+   profile.classList.remove('active');
+}
+
+// Select the sidebar element
+let sideBar = document.querySelector('.side-bar');
+
+// When the menu button is clicked:
+document.querySelector('#menu-btn').onclick = () =>{
+   // Toggle the visibility of the sidebar
+   sideBar.classList.toggle('active');
+
+   // Toggle the 'active' class on the body (used for overlays or scroll lock)
+   body.classList.toggle('active');
+}
+
+// When the close button on the sidebar is clicked:
+document.querySelector('.side-bar .close-side-bar').onclick = () =>{
+   // Hide the sidebar
+   sideBar.classList.remove('active');
+
+   // Remove the 'active' class from the body
+   body.classList.remove('active');
+}
+
+// When the window is scrolled:
+window.onscroll = () =>{
+   // Hide the profile menu
+   profile.classList.remove('active');
+
+   // Hide the search form
+   searchForm.classList.remove('active');
+
+   // If the screen width is less than 1200px (mobile/tablet)
+   if(window.innerWidth < 1200){
+      // Hide the sidebar
+      sideBar.classList.remove('active');
+
+      // Remove the 'active' class from the body
+      body.classList.remove('active');
+   }
+}
+
+// Select the dark/light mode toggle button
+let toggleBtn = document.querySelector('#toggle-btn');
+
+// Get the saved dark mode preference from localStorage
+let darkMode = localStorage.getItem('dark-mode');
+
+// Function to enable dark mode
+const enabelDarkMode = () =>{
+   // Replace the sun icon with a moon icon
+   toggleBtn.classList.replace('fa-sun', 'fa-moon');
+
+   // Add the 'dark' class to the body
+   body.classList.add('dark');
+
+   // Save the dark mode state in localStorage
+   localStorage.setItem('dark-mode', 'enabled');
+}
+
+// Function to disable dark mode
+const disableDarkMode = () =>{
+   // Replace the moon icon with a sun icon
+   toggleBtn.classList.replace('fa-moon', 'fa-sun');
+
+   // Remove the 'dark' class from the body
+   body.classList.remove('dark');
+
+   // Save the light mode state in localStorage
+   localStorage.setItem('dark-mode', 'disabled');
+}
+
+// When the toggle button is clicked:
+toggleBtn.onclick = (e) =>{
+   // Get the current dark mode setting
+   let darkMode = localStorage.getItem('dark-mode');
+
+   // Enable or disable dark mode based on the current setting
+   if(darkMode === 'disabled'){
+      enabelDarkMode();
+   }else{
+      disableDarkMode();
+   }
+}
+
+// On page load, enable dark mode if it was previously enabled
+if(darkMode === 'enabled'){
+   enabelDarkMode();
+}

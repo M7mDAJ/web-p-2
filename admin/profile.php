@@ -1,45 +1,37 @@
 <?php
 
+// Include the database connection file
 include '../components/connect.php';
 
+// Check if the tutor's ID is stored in the cookie
 if(isset($_COOKIE['tutor_id'])){
-   $tutor_id = filter_var($_COOKIE['tutor_id'], FILTER_VALIDATE_INT);
-} else {
+   // Retrieve the tutor ID from the cookie
+   $tutor_id = $_COOKIE['tutor_id'];
+}else{
+   // If no tutor ID is found, redirect to the login page
    $tutor_id = '';
    header('location:login.php');
-   exit();
 }
 
-// جلب بيانات المدرب
-$select_profile = $conn->prepare("SELECT name, profession, image FROM `tutors` WHERE id = ? LIMIT 1");
-$select_profile->execute([$tutor_id]);
+// Query to fetch all playlists associated with the tutor
+$select_playlists = $conn->prepare("SELECT * FROM `playlist` WHERE tutor_id = ?");
+$select_playlists->execute([$tutor_id]);
+$total_playlists = $select_playlists->rowCount();  // Get the total number of playlists
 
-if ($select_profile->rowCount() > 0) {
-   $fetch_profile = $select_profile->fetch(PDO::FETCH_ASSOC);
-} else {
-   header('location:logout.php'); // تسجيل الخروج إذا لم يتم العثور على بيانات
-   exit();
-}
+// Query to fetch all contents associated with the tutor
+$select_contents = $conn->prepare("SELECT * FROM `content` WHERE tutor_id = ?");
+$select_contents->execute([$tutor_id]);
+$total_contents = $select_contents->rowCount();  // Get the total number of contents
 
-// جلب الإحصائيات في استعلام واحد لتحسين الأداء
-$select_stats = $conn->prepare("
-   SELECT 
-      (SELECT COUNT(*) FROM `playlist` WHERE tutor_id = ?) AS total_playlists,
-      (SELECT COUNT(*) FROM `content` WHERE tutor_id = ?) AS total_contents,
-      (SELECT COUNT(*) FROM `likes` WHERE tutor_id = ?) AS total_likes,
-      (SELECT COUNT(*) FROM `comments` WHERE tutor_id = ?) AS total_comments
-");
-$select_stats->execute([$tutor_id, $tutor_id, $tutor_id, $tutor_id]);
-$stats = $select_stats->fetch(PDO::FETCH_ASSOC);
+// Query to fetch all likes associated with the tutor
+$select_likes = $conn->prepare("SELECT * FROM `likes` WHERE tutor_id = ?");
+$select_likes->execute([$tutor_id]);
+$total_likes = $select_likes->rowCount();  // Get the total number of likes
 
-// تخزين القيم في متغيرات
-$total_playlists = number_format($stats['total_playlists']);
-$total_contents = number_format($stats['total_contents']);
-$total_likes = number_format($stats['total_likes']);
-$total_comments = number_format($stats['total_comments']);
-
-// تعيين صورة افتراضية في حالة عدم توفر صورة
-$profile_image = !empty($fetch_profile['image']) ? "../uploaded_files/".htmlspecialchars($fetch_profile['image']) : "../images/default.png";
+// Query to fetch all comments associated with the tutor
+$select_comments = $conn->prepare("SELECT * FROM `comments` WHERE tutor_id = ?");
+$select_comments->execute([$tutor_id]);
+$total_comments = $select_comments->rowCount();  // Get the total number of comments
 
 ?>
 
@@ -51,53 +43,63 @@ $profile_image = !empty($fetch_profile['image']) ? "../uploaded_files/".htmlspec
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Profile</title>
 
-   <!-- Font Awesome CDN -->
+   <!-- Font Awesome CDN link for icons -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 
-   <!-- Custom CSS -->
+   <!-- Custom CSS link for styling -->
    <link rel="stylesheet" href="../css/admin_style.css">
+
 </head>
 <body>
 
+<!-- Include the admin header -->
 <?php include '../components/admin_header.php'; ?>
    
 <section class="tutor-profile" style="min-height: calc(100vh - 19rem);"> 
 
-   <h1 class="heading">Profile Details</h1>
+   <h1 class="heading">Profile details</h1>
 
    <div class="details">
       <div class="tutor">
-         <img src="<?= $profile_image; ?>" alt="Profile Picture">
-         <h3><?= htmlspecialchars($fetch_profile['name']); ?></h3>
-         <span><?= htmlspecialchars($fetch_profile['profession']); ?></span>
-         <a href="update.php" class="inline-btn">Update Profile</a>
+         <!-- Display tutor's profile image -->
+         <img src="../uploaded_files/<?= $fetch_profile['image']; ?>" alt="">
+         <!-- Display tutor's name and profession -->
+         <h3><?= $fetch_profile['name']; ?></h3>
+         <span><?= $fetch_profile['profession']; ?></span>
+         <!-- Link to update profile page -->
+         <a href="update.php" class="inline-btn">Update profile</a>
       </div>
       <div class="flex">
+         <!-- Display total number of playlists -->
          <div class="box">
             <span><?= $total_playlists; ?></span>
-            <p>Total Playlists</p>
-            <a href="playlists.php" class="btn">View Playlists</a>
+            <p>Total playlists</p>
+            <a href="playlists.php" class="btn">View playlists</a>
          </div>
+         <!-- Display total number of contents (videos) -->
          <div class="box">
             <span><?= $total_contents; ?></span>
-            <p>Total Videos</p>
-            <a href="contents.php" class="btn">View Contents</a>
+            <p>Total videos</p>
+            <a href="contents.php" class="btn">View contents</a>
          </div>
+         <!-- Display total number of likes -->
          <div class="box">
             <span><?= $total_likes; ?></span>
-            <p>Total Likes</p>
-            <a href="contents.php" class="btn">View Contents</a>
+            <p>Total likes</p>
+            <a href="contents.php" class="btn">View contents</a>
          </div>
+         <!-- Display total number of comments -->
          <div class="box">
             <span><?= $total_comments; ?></span>
-            <p>Total Comments</p>
-            <a href="comments.php" class="btn">View Comments</a>
+            <p>Total comments</p>
+            <a href="comments.php" class="btn">View comments</a>
          </div>
       </div>
    </div>
 
 </section>
 
+<!-- Include the footer -->
 <?php include '../components/footer.php'; ?>
 
 <script src="../js/admin_script.js"></script>

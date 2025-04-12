@@ -1,3 +1,5 @@
 <footer class="footer">
-   &copy; <?= date('Y'); ?> by <span class="footer-content"><?= htmlspecialchars("Ali, Mohammed, Kawther"); ?></span> | All rights reserved!
+
+   &copy; copyright @ <?= date('Y'); ?> by <span>Ali, Mohammed, Kawther</span> | all rights reserved!
+
 </footer>

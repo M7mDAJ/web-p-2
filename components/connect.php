@@ -1,29 +1,30 @@
 <?php
 
-// Database connection settings
-$db_host = 'localhost';
-$db_name = 'course_db';
-$db_user = 'root';
-$db_password = '';
+// Database connection details
+$db_name = 'mysql:host=localhost;dbname=course_db';  // Database connection string
+$user_name = 'root';  // Database username
+$user_password = '';  // Database password (empty for default XAMPP setup)
 
-try {
-    // Establish a secure connection using PDO with error handling
-    $conn = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_password, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, // Enable exceptions for errors
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, // Fetch data as an associative array
-        PDO::ATTR_EMULATE_PREPARES => false // Disable emulation for prepared statements
-    ]);
-} catch (PDOException $e) {
-    die("Database connection failed: " . $e->getMessage()); // Stop script and show error if connection fails
-}
+// Creating a new PDO connection to the database
+$conn = new PDO($db_name, $user_name, $user_password);
 
-/**
- * Generate a secure unique identifier
- *
- * @return string A unique ID of 20 characters
- */
+// Function to generate a unique ID
 function unique_id() {
-    return bin2hex(random_bytes(10)); // Generates a 20-character hexadecimal string
+    // Define a string containing all characters and digits that can be part of the ID
+    $str = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+    $rand = array();  // Array to hold the random characters
+    $length = strlen($str) - 1;  // Get the last index of the string
+
+    // Loop to generate 20 random characters
+    for ($i = 0; $i < 20; $i++) {
+        // Generate a random number between 0 and the length of the string (excluding last character)
+        $n = mt_rand(0, $length);
+        // Add the randomly selected character to the array
+        $rand[] = $str[$n];
+    }
+
+    // Return the unique ID as a string
+    return implode($rand);
 }
 
 ?>

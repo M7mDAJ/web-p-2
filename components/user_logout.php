@@ -1,13 +1,12 @@
 <?php
 
-// Include database connection
-include 'connect.php';
+   // Include the database connection file
+   include 'connect.php';
 
-// Delete user_id cookie
-setcookie('user_id', '', time() - 3600, '/', '', false, true);
+   // Set the 'user_id' cookie to expire immediately (removing the cookie)
+   setcookie('user_id', '', time() - 1, '/');
 
-// Redirect to home page
-header('Location: ../home.php');
-exit;
+   // Redirect the user to the home page after logging out
+   header('location:../home.php');
 
 ?>
